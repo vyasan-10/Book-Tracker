@@ -68,7 +68,8 @@ The validation was reviewed so that invalid or meaningless input could be reject
 Test valid examples such as `1984`, `Harry Potter & the Philosopher's Stone`, and `J. R. R. Tolkien`. Also test empty fields, whitespace-only input, a numeric-only author, and a title made entirely of symbols. Record which tests passed and any corrections made.
 
 
-**AI Generated Issue:**
+
+**One Time I got Ai wrong:**
 
 The AI initially used different status names, such as `want-to-read`, `currently-reading`, and `completed`, instead of the exact categories specified in the assessment: `To read`, `Reading`, and `Finished`. I noticed that the implementation did not match the required status labels.
 
