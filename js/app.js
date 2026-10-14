@@ -1,6 +1,6 @@
 /**
  * BooksHaven - Main Application Logic
- * Implements the 5 core features cleanly without external dependencies.
+ * Implements book tracking, live counters, delete confirmation, search, and refined input validation.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let books = BookStorage.getBooks();
   let currentFilter = 'all';
   let searchQuery = '';
+  let pendingDeleteBook = null;
 
   // DOM Elements
   const booksList = document.getElementById('booksList');
@@ -19,14 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
   const filterTabs = document.querySelectorAll('.filter-tab');
+  const counterCards = document.querySelectorAll('.counter-card');
 
-  // Counts
+  // Stats Counters
+  const statTotal = document.getElementById('statTotal');
+  const statToRead = document.getElementById('statToRead');
+  const statReading = document.getElementById('statReading');
+  const statFinished = document.getElementById('statFinished');
+
+  // Filter Tab Badges
   const countAll = document.getElementById('countAll');
   const countToRead = document.getElementById('countToRead');
   const countReading = document.getElementById('countReading');
   const countFinished = document.getElementById('countFinished');
 
-  // Modal & Form Elements
+  // Add Book Modal Elements
   const openModalBtn = document.getElementById('openModalBtn');
   const closeModalBtn = document.getElementById('closeModalBtn');
   const cancelModalBtn = document.getElementById('cancelModalBtn');
@@ -37,8 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const bookStatus = document.getElementById('bookStatus');
   const titleError = document.getElementById('titleError');
   const authorError = document.getElementById('authorError');
-  const toast = document.getElementById('toast');
 
+  // Delete Confirmation Modal Elements
+  const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+  const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const deleteModalMessage = document.getElementById('deleteModalMessage');
+
+  const toast = document.getElementById('toast');
   let toastTimeout = null;
 
   // --- Initial Setup ---
@@ -51,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Event Listeners ---
   function setupEventListeners() {
-    // Modal Open / Close
+    // Add Book Modal
     openModalBtn.addEventListener('click', () => openAddModal());
     emptyStateAddBtn.addEventListener('click', () => openAddModal());
     closeModalBtn.addEventListener('click', closeAddModal);
@@ -61,29 +76,41 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === bookModal) closeAddModal();
     });
 
+    // Delete Confirmation Modal
+    closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    confirmDeleteModal.addEventListener('click', (e) => {
+      if (e.target === confirmDeleteModal) closeDeleteModal();
+    });
+    confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
+
+    // Escape Key for Modals
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !bookModal.hasAttribute('hidden')) {
-        closeAddModal();
+      if (e.key === 'Escape') {
+        if (!bookModal.hasAttribute('hidden')) closeAddModal();
+        if (!confirmDeleteModal.hasAttribute('hidden')) closeDeleteModal();
       }
     });
 
-    // Form Submission with Validation
+    // Form Submission
     bookForm.addEventListener('submit', handleAddBook);
 
     // Live Inline Validation Reset on Input
     bookTitle.addEventListener('input', () => {
-      if (bookTitle.value.trim()) {
+      const res = validateTitle(bookTitle.value);
+      if (res.isValid) {
         clearFieldError(bookTitle, titleError);
       }
     });
 
     bookAuthor.addEventListener('input', () => {
-      if (bookAuthor.value.trim()) {
+      const res = validateAuthor(bookAuthor.value);
+      if (res.isValid) {
         clearFieldError(bookAuthor, authorError);
       }
     });
 
-    // Feature 3: Case-insensitive search by title or author
+    // Search Input
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value.trim().toLowerCase();
       clearSearchBtn.hidden = !searchQuery;
@@ -98,19 +125,97 @@ document.addEventListener('DOMContentLoaded', () => {
       renderBooks();
     });
 
-    // Status Filter Tabs
+    // Filter Tabs
     filterTabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        filterTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentFilter = tab.getAttribute('data-filter');
-        updateSectionHeading();
-        renderBooks();
+        const filter = tab.getAttribute('data-filter');
+        setFilter(filter);
+      });
+    });
+
+    // Overview Counter Cards Click to Filter
+    counterCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const filter = card.getAttribute('data-filter');
+        setFilter(filter);
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const filter = card.getAttribute('data-filter');
+          setFilter(filter);
+        }
       });
     });
   }
 
-  // --- Modal Helpers ---
+  // Set Active Filter & Sync Tab + Counter Card Highlights
+  function setFilter(filter) {
+    currentFilter = filter;
+
+    filterTabs.forEach(t => {
+      t.classList.toggle('active', t.getAttribute('data-filter') === filter);
+    });
+
+    counterCards.forEach(c => {
+      c.classList.toggle('active', c.getAttribute('data-filter') === filter);
+    });
+
+    updateSectionHeading();
+    renderBooks();
+  }
+
+  // --- Input Validation Helpers ---
+  /**
+   * Validates book title:
+   * - Must not be empty or whitespace only.
+   * - Must contain at least one letter or number (supports Unicode characters & accents).
+   * - Rejects strings composed solely of symbols or punctuation.
+   */
+  function validateTitle(rawTitle) {
+    const title = (rawTitle || '').trim();
+    if (!title) {
+      return { isValid: false, message: 'Please enter a book title.' };
+    }
+    // Must contain at least one letter or digit (Unicode-aware)
+    if (!/[\p{L}\p{N}]/u.test(title)) {
+      return {
+        isValid: false,
+        message: 'Title must contain letters or numbers, not just symbols.'
+      };
+    }
+    return { isValid: true, value: title };
+  }
+
+  /**
+   * Validates author name:
+   * - Must not be empty or whitespace only.
+   * - Must contain at least one letter (supports Unicode characters, accents, initials).
+   * - Rejects author names consisting purely of numbers (e.g., "12345").
+   * - Rejects author names consisting purely of symbols or punctuation.
+   */
+  function validateAuthor(rawAuthor) {
+    const author = (rawAuthor || '').trim();
+    if (!author) {
+      return { isValid: false, message: "Please enter the author's name." };
+    }
+    // Must contain at least one letter (\p{L} covers English & international alphabets)
+    if (!/\p{L}/u.test(author)) {
+      if (/^[\d\s.,\-_/\\#]+$/.test(author)) {
+        return {
+          isValid: false,
+          message: "Author name cannot consist only of numbers."
+        };
+      }
+      return {
+        isValid: false,
+        message: 'Author name must contain letters, not just symbols.'
+      };
+    }
+    return { isValid: true, value: author };
+  }
+
+  // --- Add Modal Helpers ---
   function openAddModal() {
     bookForm.reset();
     clearFieldError(bookTitle, titleError);
@@ -134,71 +239,88 @@ document.addEventListener('DOMContentLoaded', () => {
     errorElement.textContent = '';
   }
 
-  // --- Feature 1: Add a Book with Required Validation ---
+  // --- Delete Confirmation Modal Helpers ---
+  function openDeleteModal(book) {
+    pendingDeleteBook = book;
+    deleteModalMessage.innerHTML = `Are you sure you want to remove <strong>${escapeHtml(book.title)}</strong> from your reading list?`;
+    confirmDeleteModal.removeAttribute('hidden');
+    confirmDeleteBtn.focus();
+  }
+
+  function closeDeleteModal() {
+    confirmDeleteModal.setAttribute('hidden', '');
+    pendingDeleteBook = null;
+  }
+
+  function handleConfirmDelete() {
+    if (!pendingDeleteBook) return;
+
+    const bookTitleDeleted = pendingDeleteBook.title;
+    BookStorage.deleteBook(pendingDeleteBook.id);
+    closeDeleteModal();
+    showToast(`Removed "${bookTitleDeleted}" from your list`);
+    updateUI(); // Updates counters immediately
+  }
+
+  // --- Add a Book with Refined Validation ---
   function handleAddBook(e) {
     e.preventDefault();
 
-    const titleVal = bookTitle.value.trim();
-    const authorVal = bookAuthor.value.trim();
+    const titleValidation = validateTitle(bookTitle.value);
+    const authorValidation = validateAuthor(bookAuthor.value);
     const statusVal = bookStatus.value;
 
     let isValid = true;
 
-    // Validate Title
-    if (!titleVal) {
-      showFieldError(bookTitle, titleError, 'Please enter a book title.');
+    if (!titleValidation.isValid) {
+      showFieldError(bookTitle, titleError, titleValidation.message);
       isValid = false;
     } else {
       clearFieldError(bookTitle, titleError);
     }
 
-    // Validate Author
-    if (!authorVal) {
-      showFieldError(bookAuthor, authorError, "Please enter the author's name.");
+    if (!authorValidation.isValid) {
+      showFieldError(bookAuthor, authorError, authorValidation.message);
       isValid = false;
     } else {
       clearFieldError(bookAuthor, authorError);
     }
 
     if (!isValid) {
-      if (!titleVal) bookTitle.focus();
-      else if (!authorVal) bookAuthor.focus();
+      if (!titleValidation.isValid) bookTitle.focus();
+      else if (!authorValidation.isValid) bookAuthor.focus();
       return;
     }
 
-    // Save Book via BookStorage (persists to localStorage)
+    // Save Book with clean trimmed values
     const newBook = BookStorage.addBook({
-      title: titleVal,
-      author: authorVal,
+      title: titleValidation.value,
+      author: authorValidation.value,
       status: statusVal
     });
 
-    books = BookStorage.getBooks();
     closeAddModal();
     showToast(`Added "${newBook.title}" to ${newBook.status}`);
-    updateUI();
+    updateUI(); // Updates counters immediately
   }
 
-  // --- Feature 2 & 3: Filter, Search, and Newest-First Ordering ---
+  // --- Filter, Search, and Newest-First Ordering ---
   function getVisibleBooks() {
     return books
-      // Filter by Status Tab
       .filter(book => {
         if (currentFilter === 'all') return true;
         return book.status === currentFilter;
       })
-      // Feature 3: Case-insensitive search by title or author (partial match)
       .filter(book => {
         if (!searchQuery) return true;
         const titleMatch = (book.title || '').toLowerCase().includes(searchQuery);
         const authorMatch = (book.author || '').toLowerCase().includes(searchQuery);
         return titleMatch || authorMatch;
       })
-      // Feature 2: Display books newest first
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }
 
-  // --- Safe DOM Rendering (Prevents Raw HTML Injection) ---
+  // --- Safe DOM Rendering ---
   function renderBooks() {
     const visibleBooks = getVisibleBooks();
     booksList.innerHTML = '';
@@ -209,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         emptyStateMessage.textContent = `No books match "${searchQuery}".`;
         emptyStateAddBtn.hidden = true;
       } else if (currentFilter !== 'all') {
-        emptyStateMessage.textContent = `No books found under "${currentFilter}".`;
+        emptyStateMessage.textContent = `No books found in "${currentFilter}".`;
         emptyStateAddBtn.hidden = false;
       } else {
         emptyStateMessage.textContent = 'Your reading list is empty. Add a book to get started.';
@@ -220,27 +342,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     emptyState.hidden = true;
 
-    // Build each book card using safe DOM methods
     visibleBooks.forEach(book => {
       const li = document.createElement('li');
       li.className = 'book-item';
       li.dataset.id = book.id;
 
-      // Book Main Info (Title, Author, Badge, Date)
+      // Book Main Info
       const mainInfo = document.createElement('div');
       mainInfo.className = 'book-main-info';
 
-      // Title (rendered safely via textContent)
       const h3 = document.createElement('h3');
       h3.className = 'book-title';
       h3.textContent = book.title;
 
-      // Author (rendered safely via textContent)
       const pAuthor = document.createElement('p');
       pAuthor.className = 'book-author';
       pAuthor.textContent = `by ${book.author}`;
 
-      // Metadata Row
       const metaDiv = document.createElement('div');
       metaDiv.className = 'book-meta';
 
@@ -260,11 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
       mainInfo.appendChild(pAuthor);
       mainInfo.appendChild(metaDiv);
 
-      // Book Actions (Status Dropdown + Delete)
+      // Book Actions
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'book-actions';
 
-      // Feature 4: Allow users to change a book's status directly from the book list
+      // Status Dropdown
       const select = document.createElement('select');
       select.className = 'status-select';
       select.setAttribute('aria-label', `Change status for ${book.title}`);
@@ -279,32 +397,32 @@ document.addEventListener('DOMContentLoaded', () => {
         select.appendChild(option);
       });
 
-      // Change status handler
+      // Status Change Listener
       select.addEventListener('change', (e) => {
         const newStatus = e.target.value;
         const updated = BookStorage.updateStatus(book.id, newStatus);
         if (updated) {
-          books = BookStorage.getBooks();
           showToast(`Updated "${book.title}" to ${newStatus}`);
-          updateUI();
+          updateUI(); // Updates counters immediately
         }
       });
 
-      // Delete Button
+      // Delete Button with Confirmation
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-btn';
       deleteBtn.type = 'button';
       deleteBtn.setAttribute('aria-label', `Delete ${book.title}`);
       deleteBtn.title = 'Delete book';
-      deleteBtn.textContent = '✕';
+      deleteBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        <span>Delete</span>
+      `;
 
       deleteBtn.addEventListener('click', () => {
-        if (confirm(`Remove "${book.title}" from your reading list?`)) {
-          BookStorage.deleteBook(book.id);
-          books = BookStorage.getBooks();
-          showToast(`Removed "${book.title}"`);
-          updateUI();
-        }
+        openDeleteModal(book);
       });
 
       actionsDiv.appendChild(select);
@@ -317,16 +435,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- UI Update & Counter Synchronizer ---
+  // --- Dynamic Counter & UI Updater ---
   function updateUI() {
     books = BookStorage.getBooks();
 
-    // Calculate Counts
+    // Calculate real-time counts
     const total = books.length;
     const toReadCount = books.filter(b => b.status === 'To read').length;
     const readingCount = books.filter(b => b.status === 'Reading').length;
     const finishedCount = books.filter(b => b.status === 'Finished').length;
 
+    // Update Overview Counter Cards
+    statTotal.textContent = total;
+    statToRead.textContent = toReadCount;
+    statReading.textContent = readingCount;
+    statFinished.textContent = finishedCount;
+
+    // Update Filter Tab Badges
     countAll.textContent = total;
     countToRead.textContent = toReadCount;
     countReading.textContent = readingCount;
@@ -350,6 +475,16 @@ document.addEventListener('DOMContentLoaded', () => {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   // --- Toast Notification Feedback ---

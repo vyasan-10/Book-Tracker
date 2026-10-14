@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="description" content="BooksHaven - A simple, minimal, and elegant book reading tracker.">
   <title>BooksHaven — Minimal Book Tracker</title>
 
@@ -29,7 +29,29 @@
       </div>
     </header>
 
-    <!-- Overview Bar & Search -->
+    <!-- Status Overview Counters -->
+    <section class="counters-section" aria-label="Reading status overview">
+      <div class="counters-grid">
+        <div class="counter-card active" data-filter="all" role="button" tabindex="0" title="View all books">
+          <span class="counter-number" id="statTotal">0</span>
+          <span class="counter-label">Total Books</span>
+        </div>
+        <div class="counter-card" data-filter="To read" role="button" tabindex="0" title="View To read books">
+          <span class="counter-number" id="statToRead">0</span>
+          <span class="counter-label">To read</span>
+        </div>
+        <div class="counter-card" data-filter="Reading" role="button" tabindex="0" title="View currently reading books">
+          <span class="counter-number" id="statReading">0</span>
+          <span class="counter-label">Reading</span>
+        </div>
+        <div class="counter-card" data-filter="Finished" role="button" tabindex="0" title="View finished books">
+          <span class="counter-number" id="statFinished">0</span>
+          <span class="counter-label">Finished</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search & Filter Controls -->
     <section class="controls-section" aria-label="Book controls and filters">
       <div class="search-wrapper">
         <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -46,7 +68,7 @@
         <button id="clearSearchBtn" class="clear-search-btn" title="Clear search" aria-label="Clear search" hidden>&times;</button>
       </div>
 
-      <!-- Filter Tabs / Status Pill counters -->
+      <!-- Filter Tabs with count badges -->
       <nav class="filter-tabs" aria-label="Filter books by status">
         <button class="filter-tab active" data-filter="all" type="button">
           All <span class="tab-count" id="countAll">0</span>
@@ -141,6 +163,23 @@
           <button type="submit" class="btn btn-primary">Save Book</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal Dialog -->
+  <div id="confirmDeleteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" hidden>
+    <div class="modal-card modal-confirm">
+      <div class="modal-header">
+        <h2 id="deleteModalTitle" class="modal-title">Delete Book</h2>
+        <button id="closeDeleteModalBtn" class="close-btn" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteModalMessage" class="confirm-message">Are you sure you want to delete this book? This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="cancelDeleteBtn" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete Book</button>
+      </div>
     </div>
   </div>
 
