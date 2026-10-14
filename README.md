@@ -1,4 +1,4 @@
-# 📚 BooksHaven — Personal Book Tracker
+# 📚 BooksTracker — Personal Book Tracker
 
 BooksHaven is a modern, responsive web application for organizing and managing a personal reading list. It allows users to track books they want to read, are currently reading, and have finished, all from a simple browser-based interface.
 
