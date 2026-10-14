@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BooksHaven - An elegant, modern personal book tracker and reading wishlist manager.">
+  <title>BooksHaven — Personal Reading Tracker & Wishlist</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons for crisp, modern icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-background">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Main Navigation Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="brand-group">
+          <div class="brand-icon">
+            <i class="ph-duotone ph-book-open-text"></i>
+          </div>
+          <div>
+            <h1 class="brand-title">Books<span>Haven</span></h1>
+            <p class="brand-subtitle">Curate & Track Your Literary Journey</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="ph ph-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search by title, author, or genre..." autocomplete="off">
+            <button id="clearSearchBtn" class="clear-search-btn" title="Clear search" aria-label="Clear search">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+
+          <button id="openAddModalBtn" class="btn btn-primary">
+            <i class="ph-bold ph-plus"></i>
+            <span>Add New Book</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats & Highlight Overview -->
+    <section class="overview-section">
+      <div class="overview-container">
+        <!-- Quick Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" data-filter="all">
+            <div class="stat-icon-wrapper total">
+              <i class="ph-duotone ph-books"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="statTotalBooks">0</span>
+              <span class="stat-label">Total in Library</span>
+            </div>
+          </div>
+
+          <div class="stat-card active-card" data-filter="want-to-read">
+            <div class="stat-icon-wrapper want">
+              <i class="ph-duotone ph-bookmark-simple"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="statWantToRead">0</span>
+              <span class="stat-label">Want to Read</span>
+            </div>
+          </div>
+
+          <div class="stat-card" data-filter="currently-reading">
+            <div class="stat-icon-wrapper reading">
+              <i class="ph-duotone ph-book-open"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="statCurrentlyReading">0</span>
+              <span class="stat-label">Reading Now</span>
+            </div>
+          </div>
+
+          <div class="stat-card" data-filter="completed">
+            <div class="stat-icon-wrapper completed">
+              <i class="ph-duotone ph-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="statCompleted">0</span>
+              <span class="stat-label">Completed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="content-container">
+        <!-- Filter Tabs & Sort Controls -->
+        <div class="toolbar">
+          <div class="filter-tabs" role="tablist">
+            <button class="tab-btn active" data-status="all" role="tab" aria-selected="true">
+              All Books <span class="badge" id="badgeAll">0</span>
+            </button>
+            <button class="tab-btn" data-status="want-to-read" role="tab" aria-selected="false">
+              Want to Read <span class="badge" id="badgeWant">0</span>
+            </button>
+            <button class="tab-btn" data-status="currently-reading" role="tab" aria-selected="false">
+              Currently Reading <span class="badge" id="badgeReading">0</span>
+            </button>
+            <button class="tab-btn" data-status="completed" role="tab" aria-selected="false">
+              Completed <span class="badge" id="badgeCompleted">0</span>
+            </button>
+            <button class="tab-btn" data-status="favorites" role="tab" aria-selected="false">
+              <i class="ph-fill ph-heart"></i> Favorites
+            </button>
+          </div>
+
+          <div class="toolbar-controls">
+            <div class="select-wrapper">
+              <label for="genreFilter" class="sr-only">Filter by Genre</label>
+              <select id="genreFilter" class="custom-select">
+                <option value="all">All Genres</option>
+                <option value="Fiction">Fiction</option>
+                <option value="Sci-Fi & Fantasy">Sci-Fi & Fantasy</option>
+                <option value="Mystery & Thriller">Mystery & Thriller</option>
+                <option value="Non-Fiction">Non-Fiction</option>
+                <option value="Philosophy & Mindset">Philosophy & Mindset</option>
+                <option value="Biography & History">Biography & History</option>
+                <option value="Romance">Romance</option>
+                <option value="Classics">Classics</option>
+              </select>
+            </div>
+
+            <div class="select-wrapper">
+              <label for="sortBySelect" class="sr-only">Sort by</label>
+              <select id="sortBySelect" class="custom-select">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="title-asc">Title (A - Z)</option>
+                <option value="author-asc">Author (A - Z)</option>
+                <option value="rating-desc">Highest Rated</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Books Grid Container -->
+        <section id="booksGrid" class="books-grid" aria-live="polite">
+          <!-- Rendered dynamically via JavaScript -->
+        </section>
+
+        <!-- Empty State (Shown when no books match filter or library is empty) -->
+        <div id="emptyState" class="empty-state hidden">
+          <div class="empty-icon">
+            <i class="ph-duotone ph-book-open"></i>
+          </div>
+          <h2 class="empty-title">No books found in this view</h2>
+          <p class="empty-description">Add books you intend to read or adjust your search filter to see your list.</p>
+          <button id="emptyStateAddBtn" class="btn btn-primary">
+            <i class="ph-bold ph-plus"></i> Add Your First Book
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <p>BooksHaven &copy; 2026 &bull; Keep dreaming through the pages.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Add / Edit Book Modal Dialog -->
+  <div id="bookModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">
+            <i class="ph-duotone ph-book-bookmark"></i>
+          </div>
+          <div>
+            <h2 id="modalTitle">Add a Book to Read</h2>
+            <p id="modalSubtitle">Fill in the details to add this book to your reading list.</p>
+          </div>
+        </div>
+        <button id="closeModalBtn" class="btn-icon close-btn" aria-label="Close dialog">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <form id="bookForm" class="modal-form" novalidate>
+        <input type="hidden" id="bookId">
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="bookTitle">Book Title <span class="required">*</span></label>
+            <input type="text" id="bookTitle" placeholder="e.g. The Midnight Library" required>
+            <span class="field-error" id="titleError"></span>
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label for="bookAuthor">Author <span class="required">*</span></label>
+            <input type="text" id="bookAuthor" placeholder="e.g. Matt Haig" required>
+            <span class="field-error" id="authorError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="bookGenre">Genre</label>
+            <select id="bookGenre">
+              <option value="Fiction">Fiction</option>
+              <option value="Sci-Fi & Fantasy">Sci-Fi & Fantasy</option>
+              <option value="Mystery & Thriller">Mystery & Thriller</option>
+              <option value="Non-Fiction">Non-Fiction</option>
+              <option value="Philosophy & Mindset">Philosophy & Mindset</option>
+              <option value="Biography & History">Biography & History</option>
+              <option value="Romance">Romance</option>
+              <option value="Classics">Classics</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row three-col">
+          <div class="form-group">
+            <label for="bookStatus">Reading Status</label>
+            <select id="bookStatus">
+              <option value="want-to-read">Want to Read</option>
+              <option value="currently-reading">Currently Reading</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bookPages">Total Pages</label>
+            <input type="number" id="bookPages" placeholder="e.g. 320" min="1" max="99999">
+          </div>
+
+          <div class="form-group">
+            <label for="bookCurrentPage">Pages Read</label>
+            <input type="number" id="bookCurrentPage" placeholder="0" min="0" value="0">
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label>Rating (Optional)</label>
+            <div class="star-rating-input" id="starRatingInput">
+              <button type="button" class="star-btn" data-value="1" aria-label="1 star"><i class="ph ph-star"></i></button>
+              <button type="button" class="star-btn" data-value="2" aria-label="2 stars"><i class="ph ph-star"></i></button>
+              <button type="button" class="star-btn" data-value="3" aria-label="3 stars"><i class="ph ph-star"></i></button>
+              <button type="button" class="star-btn" data-value="4" aria-label="4 stars"><i class="ph ph-star"></i></button>
+              <button type="button" class="star-btn" data-value="5" aria-label="5 stars"><i class="ph ph-star"></i></button>
+              <input type="hidden" id="bookRating" value="0">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bookCoverTheme">Cover Accent Color</label>
+            <div class="cover-theme-picker" id="coverThemePicker">
+              <label class="theme-option">
+                <input type="radio" name="coverTheme" value="indigo" checked>
+                <span class="theme-swatch indigo"></span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="coverTheme" value="amber">
+                <span class="theme-swatch amber"></span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="coverTheme" value="emerald">
+                <span class="theme-swatch emerald"></span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="coverTheme" value="rose">
+                <span class="theme-swatch rose"></span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="coverTheme" value="violet">
+                <span class="theme-swatch violet"></span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="coverTheme" value="teal">
+                <span class="theme-swatch teal"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="bookNotes">Personal Notes / Why you want to read this</label>
+            <textarea id="bookNotes" rows="3" placeholder="Recommended by a friend, key themes, favorite quote or reading notes..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="saveBookBtn" class="btn btn-primary">
+            <i class="ph-bold ph-check"></i>
+            <span id="saveBtnText">Save to List</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Application Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
