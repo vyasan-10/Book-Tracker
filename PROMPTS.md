@@ -1,91 +1,80 @@
-# BooksHaven — Project Prompts & Development Log
+# BooksHaven — Prompt Log
 
 ## Prompt 1: Setting up the project
 
 **Prompt:**
 
-"Create the basic project structure for a Book Tracker website called BooksHaven using HTML, CSS, and JavaScript. Create the necessary files, including `index.html`, `styles.css`, `app.js`, `README.md`, and `PROMPTS.md`. For now, just set up a basic working page and make sure the CSS and JavaScript are connected properly. Don't start building the actual features yet."
+"Create the basic project structure for a Book Tracker website called BooksHaven using HTML, CSS, and JavaScript. Set up the necessary files and make sure the HTML page loads the CSS and JavaScript correctly. For now, just create the basic working page without implementing the book-tracking features."
 
 **What happened:**
 
-The initial project structure was set up with separate files for the page, styling, and JavaScript. This gave me a starting point to build the application gradually instead of trying to implement everything at once.
+The initial project structure was created with separate files for the HTML, CSS, and JavaScript. This gave me a starting point to develop the website gradually rather than building everything at once.
 
-## Prompt 2: Implementing the main book-tracking features
-
-**Prompt:**
-
-"Implement the five main features of BooksHaven: adding books with a title, author, and reading status; displaying the newest books first; searching by title or author; changing a book's status; and saving the collection in localStorage so it remains after refreshing the page. Title and author should be required, with clear validation messages. Keep the implementation simple and use vanilla JavaScript. Update the prompt log with what was implemented and the tests performed."
-
-**What was implemented:**
-
-- **Add Book with Validation**: Form accepting title, author, and status (`To read`, `Reading`, or `Finished`) with inline validation.
-- **Newest-First Display**: Book items timestamped and sorted descending by `createdAt`.
-- **Live Search**: Instant case-insensitive filtering across both title and author fields.
-- **Direct Status Modification**: Inline dropdown on each book card allowing immediate status updates.
-- **LocalStorage Persistence**: Data persistence under `bookshaven_books` with safe DOM rendering (`textContent`).
-- **Minimal Light Design**: Clean, warm editorial layout with soft neutral backgrounds, subtle borders, and clear typography.
-
-**Tests performed:**
-- Verified form validation on empty submissions.
-- Verified adding books, sorting order, live search filtering, status switching, and persistence across reloads.
-
-## Prompt 3: Adding a few more features
+## Prompt 2: Adding and displaying books
 
 **Prompt:**
 
-"I want to add a few more things. First, let users delete a book from their list, but show a confirmation before removing it. Also, add some simple counters to show how many books they have in each reading status. These numbers should update whenever a book is added, deleted, or moved to another status. Finally, make sure the website looks good on mobile too. The book cards, search bar, form, and counters should fit properly on smaller screens without any issues. Please work with the code that's already there instead of rebuilding everything."
+"Let's start with the main functionality. Allow users to add a book with a title, author, and reading status. The title and author should be required, and the available statuses should be To read, Reading, and Finished. Display the newest books first and add a search box that can find books by title or author. Keep the code simple and use the existing project structure."
 
-**What was implemented:**
+**What happened:**
 
-- **Delete with Confirmation Modal**: Added a dedicated accessible confirmation dialog (`#confirmDeleteModal`) showing the book title and asking for confirmation before deleting.
-- **Live Status Counters**: Added an overview grid displaying counters for Total Books, To read, Reading, and Finished. These counters synchronize in real-time whenever a book is added, deleted, or its status changed.
-- **Mobile Responsiveness**:
-  - Implemented responsive breakpoints for mobile screens (<= 640px and <= 360px).
-  - 2x2 grid for status counters on mobile screens.
-  - Stacked book card actions and touch targets (minimum 40px–44px) to prevent accidental taps.
-  - 16px font-size on inputs to prevent iOS Safari auto-zoom.
-  - Enforced `overflow-x: hidden` to ensure zero horizontal scrolling.
+The main book-tracking functionality was implemented, including the form, book list, and search. This established the core of the application before adding persistence and other improvements.
 
-## Prompt 4: Improving input validation
+## Prompt 3: Saving books after a refresh
 
 **Prompt:**
 
-"I noticed that the title and author fields currently accept things like numbers or random special characters. Can you improve the validation so it rejects obviously invalid input without blocking legitimate book titles or author names?
+"Make sure the book list is saved in localStorage so that books are still there when the page is refreshed. The saved data should include each book's title, author, and current reading status. Load the saved books when the page opens and keep the stored data updated whenever a book is added or its status changes."
 
-Allow numbers, punctuation, accents, and special characters when they make sense in a real title or name. Reject values that contain only whitespace, only numbers in the author field, or strings made entirely of meaningless symbols. Trim leading and trailing spaces before saving.
+**What happened:**
 
-Show a clear validation message next to the relevant field and prevent the book from being added if validation fails. Keep the existing design and functionality unchanged, and don't introduce any unnecessary dependencies.
+The application was set up to save and restore the book collection using localStorage. I needed to verify that the books and their current statuses remained unchanged after refreshing the page.
 
-Please test a few valid examples, such as "1984", "Harry Potter & the Philosopher's Stone", and "J. R. R. Tolkien", along with invalid inputs such as an author name containing only numbers and a title containing only symbols. Update PROMPTS.md with what you changed and the actual test results."
 
-**What was changed:**
+## Prompt 4: Adding deletion, statistics, and mobile support
 
-- **Whitespace Trimming**: Form inputs are trimmed of leading and trailing whitespace prior to validation and storage.
-- **Title Validation Rules (`validateTitle`)**:
-  - Rejects empty or whitespace-only input (`"Please enter a book title."`).
-  - Requires at least one letter or digit (`/[\p{L}\p{N}]/u`), allowing numeric titles like *"1984"* or *"Fahrenheit 451"*, while rejecting strings composed purely of symbols like *"???"* or *"!@#$"* (`"Title must contain letters or numbers, not just symbols."`).
-- **Author Validation Rules (`validateAuthor`)**:
-  - Rejects empty or whitespace-only input (`"Please enter the author's name."`).
-  - Requires at least one letter (`/\p{L}/u`), supporting international characters and accents (*"Gabriel García Márquez"*, *"Antoine de Saint-Exupéry"*).
-  - Explicitly rejects author names consisting entirely of digits (`"Author name cannot consist only of numbers."`).
-  - Rejects author names consisting purely of symbols or punctuation (`"Author name must contain letters, not just symbols."`).
-- **Real-time Feedback**: Inline error messages display directly beneath the relevant input with visual error borders (`.input-error`), clearing automatically as valid input is typed.
+**Prompt:**
 
-**Actual Test Results:**
+"I want to add a few more things to BooksHaven. Let users delete a book, but ask for confirmation before removing it. Add counters showing the total number of books and how many are To read, Reading, and Finished. Make sure the counts update when books are added, deleted, or moved to another status. Also, improve the layout so the book cards, form, search bar, and counters fit properly on mobile screens. Please work with the existing code instead of rebuilding everything."
 
-| Field | Input Tested | Expected | Actual Result | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Title** | `"1984"` | Valid | Valid (`value: "1984"`) | **PASS** |
-| **Title** | `"Harry Potter & the Philosopher's Stone"` | Valid | Valid (`value: "Harry Potter & the Philosopher's Stone"`) | **PASS** |
-| **Title** | `"Fahrenheit 451"` | Valid | Valid (`value: "Fahrenheit 451"`) | **PASS** |
-| **Title** | `"  Dune  "` | Valid | Valid (trimmed to `"Dune"`) | **PASS** |
-| **Title** | `"   "` (Whitespace only) | Invalid | Rejected: *"Please enter a book title."* | **PASS** |
-| **Title** | `"???"` (Only symbols) | Invalid | Rejected: *"Title must contain letters or numbers, not just symbols."* | **PASS** |
-| **Title** | `"!@#$%^&*()"` (Only symbols) | Invalid | Rejected: *"Title must contain letters or numbers, not just symbols."* | **PASS** |
-| **Author** | `"J. R. R. Tolkien"` | Valid | Valid (`value: "J. R. R. Tolkien"`) | **PASS** |
-| **Author** | `"Gabriel García Márquez"` | Valid | Valid (`value: "Gabriel García Márquez"`) | **PASS** |
-| **Author** | `"Antoine de Saint-Exupéry"` | Valid | Valid (`value: "Antoine de Saint-Exupéry"`) | **PASS** |
-| **Author** | `"12345"` (Only numbers) | Invalid | Rejected: *"Author name cannot consist only of numbers."* | **PASS** |
-| **Author** | `"   "` (Whitespace only) | Invalid | Rejected: *"Please enter the author's name."* | **PASS** |
-| **Author** | `"!@#$%"` (Only symbols) | Invalid | Rejected: *"Author name must contain letters, not just symbols."* | **PASS** |
-| **Author** | `"---"` (Only symbols/hyphens) | Invalid | Rejected: *"Author name cannot consist only of numbers."* | **PASS** |
+**What happened:**
+
+The application was extended with book deletion, reading statistics, and mobile layout improvements. These additions were intended to make the tracker more convenient to use.
+
+**Testing:**
+
+Confirmed that the counts update when a book is added, deleted, or moved to another status. Ensured the layout fits properly on mobile screens.
+
+
+## Prompt 5: Improving form validation
+
+**Prompt:**
+
+"I noticed that the title and author fields can accept inputs that don't make sense, such as an author name containing only numbers or a title made entirely of random symbols. Improve the validation without blocking legitimate book titles or names. Allow numbers and punctuation where appropriate, trim unnecessary spaces, and show a clear error message when the input is invalid. Keep the existing design and functionality unchanged."
+
+**Issue I noticed and how I fixed it:**
+
+While testing the form, I noticed that I could enter numbers or random special characters in the title and author fields. The form accepted these inputs even when they didn't look like valid book information. I decided to improve the validation so that it would reject meaningless input without blocking legitimate titles such as "1984" or names such as "J. R. R. Tolkien".
+
+I asked the AI to improve the validation and display clear error messages for invalid entries. After the changes, I tested valid titles and author names alongside numeric-only author names, whitespace-only input, and titles made entirely of symbols. I recorded the results based on what actually happened during testing.
+
+
+**What happened:**
+
+The validation was reviewed so that invalid or meaningless input could be rejected while legitimate titles and author names remained acceptable.
+
+**Testing:**
+
+Test valid examples such as `1984`, `Harry Potter & the Philosopher's Stone`, and `J. R. R. Tolkien`. Also test empty fields, whitespace-only input, a numeric-only author, and a title made entirely of symbols. Record which tests passed and any corrections made.
+
+
+**AI Generated Issue:**
+
+The AI initially used different status names, such as `want-to-read`, `currently-reading`, and `completed`, instead of the exact categories specified in the assessment: `To read`, `Reading`, and `Finished`. I noticed that the implementation did not match the required status labels.
+
+**How I fixed it:**
+
+I asked the AI to align the status labels with the assessment requirements and ensure that the correct labels appeared throughout the application, including the book cards, status selector, and reading statistics.
+
+
+
